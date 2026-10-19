@@ -115,7 +115,7 @@ export default function Home({ feed, onAccount, accountBadge }: Props) {
             <span className="card-body">
               <span className="card-title">{ev.title}</span>
               <span className="card-org">{ev.orgs.join(' · ')}</span>
-              <span className="card-meta">{TYPE_LABEL[ev.type]} · {fmtDate(ev.date, true)} · {ev.time} · {ev.routed ? '' : '~'}{km(ev.length)}</span>
+              <span className="card-meta">{TYPE_LABEL[ev.type]} · <span className="nb">{fmtDate(ev.date, true)}</span> · {ev.time} · <span className="nb">{ev.routed ? '' : '~'}{km(ev.length)}</span></span>
               <span className="card-desc">{ev.desc}</span>
             </span>
             <button className="go" aria-label={'Dettagli ' + ev.title} onClick={e => { e.stopPropagation(); select(ev.id, true); }}><Chevron /></button>

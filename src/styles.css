@@ -40,6 +40,8 @@
   color-scheme: dark;
 }
 html, body, #root { height: 100%; margin: 0; }
+@supports (height: 100dvh) { html, body, #root { height: 100dvh; } }
+html, body { overscroll-behavior: none; }
 body {
   background: var(--page); color: var(--ink); font-family: var(--font);
   overflow: hidden; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
@@ -117,6 +119,7 @@ button, select { font-family: inherit; color: inherit; }
 .card-title { font-weight: 600; font-size: 14px; line-height: 1.2; text-wrap: balance; }
 .card-org { font-size: 11px; font-weight: 500; color: var(--muted); }
 .card-meta { font-size: 10.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.card-meta .nb { white-space: nowrap; }
 .card-desc { font-size: 10.5px; font-weight: 500; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .go { width: 34px; height: 34px; border-radius: 10px; border: 0; background: var(--btn-bg); color: var(--btn-fg); display: grid; place-items: center; cursor: pointer; }
 .empty { text-align: center; color: var(--muted); font-size: 13px; padding: 30px 10px; line-height: 1.5; }
@@ -201,7 +204,7 @@ a.cta { display: grid; place-items: center; text-decoration: none; text-align: c
 .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .field > span { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .input, .field textarea, .field select {
-  width: 100%; font: 500 15px var(--font); color: var(--ink); background: var(--surface);
+  width: 100%; font: 500 16px var(--font); color: var(--ink); background: var(--surface);
   border: 1.5px solid var(--line); border-radius: 10px; padding: 11px 12px; outline: none;
 }
 .input:focus, .field textarea:focus, .field select:focus { border-color: var(--ink); }
@@ -229,7 +232,7 @@ a.cta { display: grid; place-items: center; text-decoration: none; text-align: c
 .item { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: start; background: var(--card); border-radius: 12px; padding: 10px; }
 .item .n { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 800; display: grid; place-items: center; margin-top: 8px; }
 .item .fields { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.item .input { padding: 8px 10px; font-size: 14px; }
+.item .input { padding: 8px 10px; font-size: 16px; }
 .item .acts { display: flex; flex-direction: column; gap: 4px; }
 .mini { width: 30px; height: 30px; border-radius: 8px; border: 0; background: var(--surface); cursor: pointer; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
 .switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 600; }

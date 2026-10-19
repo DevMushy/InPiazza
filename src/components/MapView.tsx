@@ -115,7 +115,10 @@ export default function MapView(p: Props) {
       sel.pois.forEach((po, i) => {
         if (!poiOn.has(po.type)) return;
         const on = selectedPoi?.eventId === sel.id && selectedPoi.index === i;
-        add(btn('mk-poi' + (on ? ' on' : ''), badgeHTML(po.type), po.name || POI_TYPES[po.type].label), [po.lng, po.lat], { anchor: 'center' },
+        // un punto sopra il ritrovo o l'arrivo viene spostato di lato per non coprire il segnaposto
+        const near = (q: LngLat) => Math.abs(q[0] - po.lng) < 0.00035 && Math.abs(q[1] - po.lat) < 0.00025;
+        const offset: [number, number] = sel.line.length && near(sel.line[0]) ? [22, 4] : sel.line.length > 1 && near(sel.line[sel.line.length - 1]) ? [-22, -6] : [0, 0];
+        add(btn('mk-poi' + (on ? ' on' : ''), badgeHTML(po.type), po.name || POI_TYPES[po.type].label), [po.lng, po.lat], { anchor: 'center', offset },
           () => props.current.onSelectPoi?.({ eventId: sel.id, index: i }));
       });
       if (editStops) {
