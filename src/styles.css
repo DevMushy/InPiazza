@@ -209,7 +209,13 @@ a.cta { display: grid; place-items: center; text-decoration: none; text-align: c
 }
 .input:focus, .field textarea:focus, .field select:focus { border-color: var(--ink); }
 .field textarea { resize: vertical; min-height: 80px; line-height: 1.45; }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+/* iOS dà a data e ora una larghezza minima propria: senza questo escono dalla colonna */
+input[type="date"].input, input[type="time"].input {
+  -webkit-appearance: none; appearance: none; min-width: 0; max-width: 100%; display: block;
+  min-height: 46px; text-align: left; line-height: 1.2;
+}
+input[type="date"]::-webkit-date-and-time-value, input[type="time"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .cta:disabled { opacity: .45; cursor: default; }
 .cta.danger { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
 .status { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 5px 9px; border-radius: 6px; background: var(--surface); width: fit-content; }

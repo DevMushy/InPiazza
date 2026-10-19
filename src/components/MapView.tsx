@@ -62,6 +62,10 @@ export default function MapView(p: Props) {
       }
       setReady(true);
     });
+    // crediti OpenStreetMap sempre chiusi: resta solo la "i", che si apre al tocco
+    const collapseAttrib = () => el.current?.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show');
+    map.once('load', collapseAttrib);
+    map.once('idle', collapseAttrib);
     map.on('click', e => props.current.onMapClick?.([e.lngLat.lng, e.lngLat.lat]));
     map.on('error', e => { if (!map.isStyleLoaded() && /fetch|style|NetworkError/i.test(String(e.error?.message))) setFailed(true); });
     const ro = new ResizeObserver(() => map.resize());
