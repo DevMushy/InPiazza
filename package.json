@@ -1,0 +1,38 @@
+{
+  "name": "in-piazza",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "cap:sync": "npm run build && npx cap sync",
+    "ios": "npm run cap:sync && npx cap open ios",
+    "android": "npm run cap:sync && npx cap open android",
+    "deploy:web": "npm run build && firebase deploy --only hosting",
+    "deploy:rules": "firebase deploy --only firestore",
+    "seed": "node scripts/seed.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "~7.6.9",
+    "@capacitor/app": "~7.1.2",
+    "@capacitor/core": "~7.6.9",
+    "@capacitor/ios": "~7.6.9",
+    "@fontsource/montserrat": "~5.2.5",
+    "firebase": "~11.10.0",
+    "maplibre-gl": "4.7.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "~7.6.9",
+    "@types/react": "~18.3.12",
+    "@types/react-dom": "~18.3.1",
+    "@vitejs/plugin-react": "~4.7.0",
+    "firebase-admin": "~13.10.0",
+    "typescript": "~5.9.3",
+    "vite": "~6.4.4"
+  }
+}

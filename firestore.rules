@@ -1,0 +1,81 @@
+rules_version = '2';
+
+// Principio: il pubblico legge solo manifestazioni pubblicate, senza login.
+// L'unico dato personale salvato è l'email di chi chiede l'accesso come organizzatore,
+// e resta in Firestore solo finché la richiesta è in attesa.
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function isAdmin() { return signedIn() && exists(/databases/$(db)/documents/admins/$(me())); }
+    function isOrganizer() { return signedIn() && exists(/databases/$(db)/documents/organizers/$(me())); }
+
+    function str(v, min, max) { return v is string && v.size() >= min && v.size() <= max; }
+
+    function validEvent(d) {
+      return d.keys().hasOnly(['ownerUid','published','type','title','orgs','date','time','desc',
+                               'stops','pois','route','routed','length','stopDist','updatedAt'])
+        && d.keys().hasAll(['ownerUid','published','type','title','orgs','date','time','desc',
+                            'stops','pois','route','routed','length','stopDist','updatedAt'])
+        && d.published is bool
+        && d.type in ['corteo','festa','fiaccolata','presidio']
+        && str(d.title, 3, 120)
+        && d.orgs is list && d.orgs.size() <= 10
+        && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.time is string && d.time.matches('^[0-9]{2}:[0-9]{2}$')
+        && str(d.desc, 0, 2000)
+        && d.stops is list && d.stops.size() >= 1 && d.stops.size() <= 15
+        && d.pois is list && d.pois.size() <= 50
+        && d.route is list && d.route.size() <= 8000
+        && d.routed is bool
+        && d.length is number
+        && d.stopDist is list
+        && d.updatedAt == request.time;
+    }
+
+    match /events/{id} {
+      allow read: if resource.data.published == true
+                  || (signedIn() && resource.data.ownerUid == me())
+                  || isAdmin();
+      allow create: if isOrganizer()
+                    && request.resource.data.ownerUid == me()
+                    && validEvent(request.resource.data);
+      allow update: if ((isOrganizer() && resource.data.ownerUid == me()) || isAdmin())
+                    && request.resource.data.ownerUid == resource.data.ownerUid
+                    && validEvent(request.resource.data);
+      allow delete: if (isOrganizer() && resource.data.ownerUid == me()) || isAdmin();
+    }
+
+    // Richiesta di accesso: un documento per utente, id = uid
+    match /accessRequests/{uid} {
+      allow read: if (signedIn() && me() == uid) || isAdmin();
+      allow create: if signedIn() && me() == uid
+                    && request.resource.data.keys().hasOnly(['orgName','note','email','status','createdAt'])
+                    && str(request.resource.data.orgName, 2, 80)
+                    && str(request.resource.data.note, 0, 500)
+                    && request.resource.data.email == request.auth.token.email
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.createdAt == request.time;
+      // solo l'admin cambia lo stato (e cancella l'email quando rifiuta)
+      allow update: if isAdmin()
+                    && request.resource.data.keys().hasOnly(['orgName','note','status','createdAt','decidedAt']);
+      // l'utente può ritirare la richiesta, l'admin la elimina all'approvazione
+      allow delete: if (signedIn() && me() == uid) || isAdmin();
+    }
+
+    // Organizzatori approvati: { orgName, approvedAt }
+    match /organizers/{uid} {
+      allow read: if signedIn() && (me() == uid || isAdmin());
+      allow create, update: if isAdmin()
+                            && request.resource.data.keys().hasOnly(['orgName','approvedAt']);
+      allow delete: if isAdmin() || (signedIn() && me() == uid);
+    }
+
+    // Admin: si creano solo a mano dalla console Firebase
+    match /admins/{uid} {
+      allow read: if signedIn() && me() == uid;
+      allow write: if false;
+    }
+  }
+}
