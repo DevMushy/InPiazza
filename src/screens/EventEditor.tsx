@@ -59,7 +59,8 @@ export default function EventEditor({ uid, orgName, event, onClose }: Props) {
     const ctrl = new AbortController();
     setSearching(true);
     const t = setTimeout(async () => {
-      const near = stops.length ? [stops[stops.length - 1].lng, stops[stops.length - 1].lat] as LngLat : CONFIG.center;
+      // vicino all'ultima tappa; senza tappe ma con la città scritta, decide il testo della città
+      const near: LngLat | null = stops.length ? [stops[stops.length - 1].lng, stops[stops.length - 1].lat] : city.trim() ? null : CONFIG.center;
       const query = city && !text.toLocaleLowerCase('it').includes(city.toLocaleLowerCase('it')) ? `${text}, ${city}` : text;
       try { setResults(await searchPlaces(query, near, ctrl.signal)); setSearchErr(false); }
       catch (e) { if ((e as Error).name !== 'AbortError') { setResults([]); setSearchErr(true); } }
