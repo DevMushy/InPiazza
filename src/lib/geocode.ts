@@ -23,7 +23,7 @@ export async function searchPlaces(q: string, near: LngLat | null, signal?: Abor
   const u = new URL(CONFIG.geocoderUrl.replace(/\/$/, '') + '/api/');
   u.searchParams.set('q', q);
   u.searchParams.set('limit', '6');
-  u.searchParams.set('lang', 'it');
+  u.searchParams.set('lang', 'default');
   if (near) { u.searchParams.set('lon', String(near[0])); u.searchParams.set('lat', String(near[1])); u.searchParams.set('location_bias_scale', '0.5'); u.searchParams.set('limit', '12'); }
   const r = await fetch(u, { signal });
   if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -46,7 +46,7 @@ export async function searchPlaces(q: string, near: LngLat | null, signal?: Abor
 export async function cityAt(ll: LngLat): Promise<string> {
   try {
     const u = new URL(CONFIG.geocoderUrl.replace(/\/$/, '') + '/reverse');
-    u.searchParams.set('lon', String(ll[0])); u.searchParams.set('lat', String(ll[1])); u.searchParams.set('lang', 'it');
+    u.searchParams.set('lon', String(ll[0])); u.searchParams.set('lat', String(ll[1])); u.searchParams.set('lang', 'default');
     const r = await fetch(u); if (!r.ok) return '';
     const f = (await r.json()).features?.[0] as PhotonFeature | undefined;
     return f ? toPlace(f).city : '';
