@@ -179,7 +179,7 @@ export default function EventEditor({ uid, orgName, event, onClose }: Props) {
                 {(Object.keys(TYPE_LABEL) as EventType[]).map(t => <option key={t} value={t}>{TYPE_LABEL[t]}</option>)}
               </select>
             </label>
-            <label className="field"><span>Organizzano</span><input id="ev-orgs" className="input" value={orgs} onChange={e => setOrgs(e.target.value)} placeholder="Separati da virgola" /></label>
+            <label className="field"><span>Organizzatori</span><input id="ev-orgs" className="input" value={orgs} onChange={e => setOrgs(e.target.value)} placeholder="Separati da virgola" /></label>
           </div>
           <label className="field"><span>Città</span><input id="ev-city" className="input" maxLength={60} autoComplete="address-level2" value={city} onChange={e => setCity(e.target.value)} placeholder="Si compila dalla prima tappa" /></label>
           <div className="row2">

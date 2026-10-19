@@ -174,7 +174,7 @@ function EventDetail({ ev, poiOn, onPoi, onShow }: { ev: EventItem; poiOn: Set<P
         <div className="fact"><b>Lunghezza</b><span>{ev.routed ? '' : '~'}{km(ev.length)}</span></div>
         <div className="fact"><b>Durata a piedi</b><span>{durTxt(total)}</span></div>
       </div>
-      {ev.orgs.length > 0 && <div className="sec"><h3>Organizzano</h3><div className="tags">{ev.orgs.map(o => <span key={o} className="tag">{o}</span>)}</div></div>}
+      {ev.orgs.length > 0 && <div className="sec"><h3>Organizzatori</h3><div className="tags">{ev.orgs.map(o => <span key={o} className="tag">{o}</span>)}</div></div>}
       {ev.desc && <div className="sec"><h3>Descrizione</h3><p>{ev.desc}</p></div>}
       <div className="sec"><h3>Percorso</h3>
         <ol className="timeline">
