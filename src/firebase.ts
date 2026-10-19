@@ -2,7 +2,7 @@ import { initializeApp, type FirebaseApp } from 'firebase/app';
 import {
   initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, type Auth
 } from 'firebase/auth';
-import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, type Firestore } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, type Firestore } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { CONFIG, firebaseConfigured } from './config';
 
@@ -18,7 +18,12 @@ if (firebaseConfigured) {
     persistence: Capacitor.isNativePlatform() ? indexedDBLocalPersistence : [indexedDBLocalPersistence, browserLocalPersistence]
   });
   auth.languageCode = 'it';
-  db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentSingleTabManager({}) }) });
+  // cache offline condivisa tra più schede aperte (con una sola scheda, la seconda restava senza dati)
+  try {
+    db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+  } catch {
+    db = initializeFirestore(app, {});
+  }
 }
 
 export { app, auth, db };
