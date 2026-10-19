@@ -85,6 +85,17 @@ L'utente può ritirare la richiesta, uscire o **eliminare l'account** dall'app.
 
 Le regole in `firestore.rules` accettano **solo** questi campi: un client modificato non può aggiungerne altri.
 
+### Avviso email per le nuove richieste
+
+Quando qualcuno invia una richiesta, l'app chiama la funzione Vercel `api/notify-request.js`, che manda un'email all'admin tramite [Resend](https://resend.com) (piano gratuito: 100 email al giorno).
+La funzione legge la richiesta da Firestore con il token dell'utente stesso, quindi non servono chiavi di servizio e nessuno può far partire avvisi per richieste altrui. Avvisa solo per richieste create negli ultimi 10 minuti.
+
+1. Crea un account su Resend → **API Keys** → crea una chiave.
+2. Su Vercel → Settings → Environment Variables aggiungi `RESEND_API_KEY` e `ADMIN_EMAIL`, poi ridistribuisci.
+3. Senza dominio verificato Resend spedisce da `onboarding@resend.dev` e **solo all'indirizzo con cui ti sei registrato**: usa quello come `ADMIN_EMAIL`. Per mandare a più persone verifica un tuo dominio su Resend e imposta `MAIL_FROM`.
+
+L'email dell'organizzatore passa da Resend solo per arrivare a te; Resend non la usa per altro.
+
 ## 4. Pubblicare il web
 
 ```bash

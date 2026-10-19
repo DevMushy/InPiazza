@@ -64,6 +64,18 @@ export async function requestAccess(user: User, orgName: string, note: string) {
   await setDoc(doc(db, 'accessRequests', user.uid), {
     orgName: orgName.trim(), note: note.trim(), email: user.email, status: 'pending', createdAt: serverTimestamp()
   });
+  notifyAdmin(user).catch(() => { /* l'avviso è facoltativo: la richiesta è comunque salvata */ });
+}
+
+/** Chiede alla funzione su Vercel di mandare un'email all'admin */
+async function notifyAdmin(user: User) {
+  const base = Capacitor.isNativePlatform() ? CONFIG.publicUrl.replace(/\/$/, '') : '';
+  const token = await user.getIdToken();
+  await fetch(base + '/api/notify-request', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uid: user.uid })
+  });
 }
 export async function withdrawRequest(user: User) {
   if (db) await deleteDoc(doc(db, 'accessRequests', user.uid));
