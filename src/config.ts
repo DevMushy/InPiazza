@@ -14,6 +14,8 @@ export const CONFIG = {
   mapStyleUrl: (env.VITE_MAP_STYLE_URL as string) || 'https://tiles.openfreemap.org/styles/positron',
   // Routing pedonale usato SOLO quando un organizzatore salva un percorso. Il pubblico non lo chiama mai.
   routerUrl: (env.VITE_ROUTER_URL as string) || 'https://routing.openstreetmap.de/routed-foot/route/v1/foot/',
+  // Ricerca indirizzi (Photon, basato su OpenStreetMap): usata solo nell'editor degli organizzatori
+  geocoderUrl: (env.VITE_GEOCODER_URL as string) || 'https://photon.komoot.io',
   center: [11.2558, 43.7731] as [number, number],
   zoom: 14.2,
   recolor: true

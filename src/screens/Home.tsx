@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView, { type FitRequest, type PoiRef } from '../components/MapView';
 import BottomSheet from '../components/BottomSheet';
 import Badge from '../components/Badge';
-import { Calendar, Caret, Chevron, NumPin, Person } from '../components/Icons';
+import { Calendar, Caret, Chevron, NumPin, Person, Pin } from '../components/Icons';
 import { POI_KEYS, POI_TYPES, TYPE_LABEL, TYPE_PLURAL } from '../constants';
 import { addMin, durTxt, fmtDate, km, walkMin } from '../lib/format';
+import { unionBbox } from '../lib/geo';
 import type { Feed } from '../data/events';
 import type { EventItem, EventType, PoiType, SheetMode } from '../types';
 
@@ -13,6 +14,7 @@ interface Props { feed: Feed; onAccount: () => void; accountBadge: boolean }
 export default function Home({ feed, onAccount, accountBadge }: Props) {
   const [type, setType] = useState<EventType | ''>('');
   const [date, setDate] = useState('');
+  const [city, setCity] = useState('');
   const [poiOn, setPoiOn] = useState<Set<PoiType>>(new Set(POI_KEYS));
   const [selId, setSelId] = useState<string | null>(null);
   const [selPoi, setSelPoi] = useState<PoiRef | null>(null);
@@ -21,7 +23,14 @@ export default function Home({ feed, onAccount, accountBadge }: Props) {
   const phone = useRef<HTMLDivElement>(null);
   const mapWrap = useRef<HTMLDivElement>(null);
 
-  const visible = useMemo(() => feed.events.filter(e => (!type || e.type === type) && (!date || e.date === date)), [feed.events, type, date]);
+  const cityKey = (c: string) => c.trim().toLocaleLowerCase('it');
+  const cities = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const e of feed.events) if (e.city && !m.has(cityKey(e.city))) m.set(cityKey(e.city), e.city.trim());
+    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1], 'it'));
+  }, [feed.events]);
+  const visible = useMemo(() => feed.events.filter(e =>
+    (!type || e.type === type) && (!date || e.date === date) && (!city || cityKey(e.city) === city)), [feed.events, type, date, city]);
   const dates = useMemo(() => [...new Set(feed.events.map(e => e.date))].sort(), [feed.events]);
   const types = useMemo(() => [...new Set(feed.events.map(e => e.type))], [feed.events]);
   const sel = visible.find(e => e.id === selId) ?? null;
@@ -38,10 +47,15 @@ export default function Home({ feed, onAccount, accountBadge }: Props) {
   const fitTo = (ev: EventItem | null, m: SheetMode = sheet) => setFit(f => ({ key: (f?.key ?? 0) + 1, bbox: ev?.bbox ?? null, bottom: covered(m) }));
 
   // prima inquadratura quando arrivano i dati
-  const firstFit = useRef(false);
+  // inquadratura automatica: all'avvio il primo evento, dopo un cambio filtro tutti quelli visibili
+  const pendingFit = useRef<'first' | 'all' | null>('first');
   useEffect(() => {
-    if (!firstFit.current && shownSel) { firstFit.current = true; fitTo(shownSel, 'closed'); }
-  }, [shownSel]);
+    const mode = pendingFit.current;
+    if (!mode || !visible.length) return;
+    pendingFit.current = null;
+    if (mode === 'all' && visible.length > 1) setFit(f => ({ key: (f?.key ?? 0) + 1, bbox: unionBbox(visible.map(e => e.bbox)), bottom: 0 }));
+    else fitTo(visible[0], 'closed');
+  }, [visible]);
 
   const select = (id: string, open: boolean) => {
     const ev = visible.find(e => e.id === id) ?? null;
@@ -56,7 +70,7 @@ export default function Home({ feed, onAccount, accountBadge }: Props) {
     const p = ev.pois[r.index];
     setTimeout(() => setFit(f => ({ key: (f?.key ?? 0) + 1, bbox: null, center: [p.lng, p.lat], zoom: 16.5, bottom: covered('half') })), 60);
   };
-  const changeFilter = (fn: () => void) => { fn(); setSheet('closed'); setSelPoi(null); setSelId(null); firstFit.current = false; };
+  const changeFilter = (fn: () => void) => { fn(); setSheet('closed'); setSelPoi(null); setSelId(null); pendingFit.current = 'all'; };
   const togglePoi = (k: PoiType) => setPoiOn(s => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n; });
 
   const poiEv = selPoi ? feed.events.find(e => e.id === selPoi.eventId) : null;
@@ -78,6 +92,15 @@ export default function Home({ feed, onAccount, accountBadge }: Props) {
       </div>
 
       <div className="filters">
+        {cities.length > 1 && (
+          <label className="pill">
+            <Pin />
+            <select value={city} onChange={e => changeFilter(() => setCity(e.target.value))} aria-label="Città">
+              <option value="">Tutte le città</option>
+              {cities.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+            </select>
+          </label>
+        )}
         <label className="pill">
           <Caret />
           <select value={type} onChange={e => changeFilter(() => setType(e.target.value as EventType | ''))} aria-label="Tipo di manifestazione">
@@ -115,7 +138,7 @@ export default function Home({ feed, onAccount, accountBadge }: Props) {
             <span className="card-body">
               <span className="card-title">{ev.title}</span>
               <span className="card-org">{ev.orgs.join(' · ')}</span>
-              <span className="card-meta">{TYPE_LABEL[ev.type]} · <span className="nb">{fmtDate(ev.date, true)}</span> · {ev.time} · <span className="nb">{ev.routed ? '' : '~'}{km(ev.length)}</span></span>
+              <span className="card-meta">{TYPE_LABEL[ev.type]}{ev.city ? ' · ' + ev.city : ''} · <span className="nb">{fmtDate(ev.date, true)}</span> · {ev.time} · <span className="nb">{ev.routed ? '' : '~'}{km(ev.length)}</span></span>
               <span className="card-desc">{ev.desc}</span>
             </span>
             <button className="go" aria-label={'Dettagli ' + ev.title} onClick={e => { e.stopPropagation(); select(ev.id, true); }}><Chevron /></button>
@@ -126,7 +149,7 @@ export default function Home({ feed, onAccount, accountBadge }: Props) {
       <BottomSheet
         mode={sheet} onMode={m => { setSheet(m); if (m === 'closed') setSelPoi(null); }}
         halfY={halfY} container={phone}
-        eyebrow={poi ? POI_TYPES[poi.type].label : shownSel ? TYPE_LABEL[shownSel.type] + ' · ' + fmtDate(shownSel.date, true) : ''}
+        eyebrow={poi ? POI_TYPES[poi.type].label : shownSel ? [TYPE_LABEL[shownSel.type], shownSel.city, fmtDate(shownSel.date, true)].filter(Boolean).join(' · ') : ''}
         title={poi ? poi.name || POI_TYPES[poi.type].label : shownSel?.title ?? ''}
         scrollKey={(selPoi ? selPoi.eventId + selPoi.index : '') + (shownSel?.id ?? '')}
       >

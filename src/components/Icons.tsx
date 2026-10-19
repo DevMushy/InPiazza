@@ -22,3 +22,9 @@ export const NumPin = ({ n }: { n: number }) => (
     <span>{n}</span>
   </span>
 );
+export const Pin = () => (
+  <svg width="10" height="12" viewBox="0 0 24 28" fill="currentColor" aria-hidden="true"><path d="M12 27C8 20.5 2 16.5 2 10.5a10 10 0 0 1 20 0c0 6-6 10-10 16.5zm0-12.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" /></svg>
+);
+export const Search = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M20 20l-4.8-4.8" /></svg>
+);

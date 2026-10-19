@@ -1,45 +1,247 @@
 [
-  { "id": "demo-1", "type": "corteo", "title": "San Marco – S. M. Novella", "orgs": ["SdS", "GKN", "GPI"], "date": "2026-11-07", "time": "15:00",
-    "desc": "Corteo cittadino per il lavoro e contro le delocalizzazioni. Ritrovo in piazza San Marco, passaggio dal Duomo e comizio finale con interventi dal palco a Santa Maria Novella.",
-    "stops": [
-      { "name": "Piazza San Marco", "note": "Ritrovo e partenza", "lng": 11.25903, "lat": 43.77793 },
-      { "name": "Piazza del Duomo", "note": "Sosta breve", "lng": 11.25553, "lat": 43.7729 },
-      { "name": "Piazza S. M. Novella", "note": "Comizio finale", "lng": 11.24935, "lat": 43.7741 } ],
-    "pois": [
-      { "type": "info", "name": "Punto info partenza", "note": "Volantini, pettorine, servizio d’ordine", "lng": 11.25915, "lat": 43.77775 },
-      { "type": "soccorso", "name": "Postazione Croce Rossa", "note": "Ambulanza e primo soccorso", "lng": 11.2576, "lat": 43.7757 },
-      { "type": "ristoro", "name": "Acqua e ristoro", "note": "Bottiglie d’acqua gratuite", "lng": 11.2553, "lat": 43.7731 },
-      { "type": "wc", "name": "Bagni chimici", "note": "4 cabine, una accessibile", "lng": 11.2518, "lat": 43.7737 },
-      { "type": "palco", "name": "Palco finale", "note": "Interventi dalle 17:00", "lng": 11.2491, "lat": 43.7744 } ] },
-  { "id": "demo-2", "type": "festa", "title": "Festa d’Oltrarno", "orgs": ["Comitato Oltrarno", "Arci"], "date": "2026-11-07", "time": "18:00",
-    "desc": "Festa di quartiere con musica dal vivo, cucina popolare e banchi delle associazioni lungo le vie dell’Oltrarno.",
-    "stops": [
-      { "name": "Piazza del Carmine", "note": "Banchi associazioni", "lng": 11.24392, "lat": 43.76825 },
-      { "name": "Piazza Santo Spirito", "note": "Musica dal vivo", "lng": 11.24783, "lat": 43.767 },
-      { "name": "Piazza dei Pitti", "note": "Chiusura e DJ set", "lng": 11.2506, "lat": 43.7658 } ],
-    "pois": [
-      { "type": "palco", "name": "Palco Santo Spirito", "note": "Concerti dalle 19:30", "lng": 11.2479, "lat": 43.7672 },
-      { "type": "ristoro", "name": "Cucina popolare", "note": "Primi e panini, anche vegani", "lng": 11.2455, "lat": 43.7678 },
-      { "type": "wc", "name": "Bagni", "note": "", "lng": 11.2492, "lat": 43.7664 },
-      { "type": "info", "name": "Info e volontari", "note": "", "lng": 11.2441, "lat": 43.7684 } ] },
-  { "id": "demo-3", "type": "corteo", "title": "Porta al Prato – Santa Croce", "orgs": ["CGIL", "Collettivi studenteschi"], "date": "2026-11-14", "time": "10:30",
-    "desc": "Manifestazione regionale per la scuola pubblica. Arrivo in piazza Santa Croce con concerto di chiusura.",
-    "stops": [
-      { "name": "Porta al Prato", "note": "Concentramento", "lng": 11.2402, "lat": 43.77745 },
-      { "name": "Stazione S. M. Novella", "note": "Passaggio", "lng": 11.2486, "lat": 43.7764 },
-      { "name": "Piazza del Duomo", "note": "Passaggio", "lng": 11.25553, "lat": 43.7729 },
-      { "name": "Piazza Santa Croce", "note": "Arrivo e concerto", "lng": 11.26215, "lat": 43.7686 } ],
-    "pois": [
-      { "type": "info", "name": "Accoglienza pullman", "note": "", "lng": 11.2405, "lat": 43.7772 },
-      { "type": "soccorso", "name": "Primo soccorso", "note": "", "lng": 11.2475, "lat": 43.7765 },
-      { "type": "palco", "name": "Palco Santa Croce", "note": "Concerto dalle 13:00", "lng": 11.2622, "lat": 43.7684 } ] },
-  { "id": "demo-4", "type": "fiaccolata", "title": "Fiaccolata Rifredi – San Marco", "orgs": ["ANPI", "Arci"], "date": "2026-11-21", "time": "20:30",
-    "desc": "Fiaccolata in memoria, con letture lungo il percorso. Le fiaccole vengono distribuite al punto di ritrovo.",
-    "stops": [
-      { "name": "Piazza Dalmazia", "note": "Distribuzione fiaccole", "lng": 11.2383, "lat": 43.7953 },
-      { "name": "Piazza della Libertà", "note": "Prima lettura", "lng": 11.2618, "lat": 43.7851 },
-      { "name": "Piazza San Marco", "note": "Saluto finale", "lng": 11.25903, "lat": 43.77793 } ],
-    "pois": [
-      { "type": "info", "name": "Fiaccole e info", "note": "", "lng": 11.2386, "lat": 43.7951 },
-      { "type": "palco", "name": "Letture finali", "note": "", "lng": 11.2592, "lat": 43.7777 } ] }
+ {
+  "id": "demo-1",
+  "type": "corteo",
+  "title": "San Marco – S. M. Novella",
+  "orgs": [
+   "SdS",
+   "GKN",
+   "GPI"
+  ],
+  "date": "2026-11-07",
+  "time": "15:00",
+  "desc": "Corteo cittadino per il lavoro e contro le delocalizzazioni. Ritrovo in piazza San Marco, passaggio dal Duomo e comizio finale con interventi dal palco a Santa Maria Novella.",
+  "city": "Firenze",
+  "stops": [
+   {
+    "name": "Piazza San Marco",
+    "note": "Ritrovo e partenza",
+    "lng": 11.25903,
+    "lat": 43.77793
+   },
+   {
+    "name": "Piazza del Duomo",
+    "note": "Sosta breve",
+    "lng": 11.25553,
+    "lat": 43.7729
+   },
+   {
+    "name": "Piazza S. M. Novella",
+    "note": "Comizio finale",
+    "lng": 11.24935,
+    "lat": 43.7741
+   }
+  ],
+  "pois": [
+   {
+    "type": "info",
+    "name": "Punto info partenza",
+    "note": "Volantini, pettorine, servizio d’ordine",
+    "lng": 11.25915,
+    "lat": 43.77775
+   },
+   {
+    "type": "soccorso",
+    "name": "Postazione Croce Rossa",
+    "note": "Ambulanza e primo soccorso",
+    "lng": 11.2576,
+    "lat": 43.7757
+   },
+   {
+    "type": "ristoro",
+    "name": "Acqua e ristoro",
+    "note": "Bottiglie d’acqua gratuite",
+    "lng": 11.2553,
+    "lat": 43.7731
+   },
+   {
+    "type": "wc",
+    "name": "Bagni chimici",
+    "note": "4 cabine, una accessibile",
+    "lng": 11.2518,
+    "lat": 43.7737
+   },
+   {
+    "type": "palco",
+    "name": "Palco finale",
+    "note": "Interventi dalle 17:00",
+    "lng": 11.2491,
+    "lat": 43.7744
+   }
+  ]
+ },
+ {
+  "id": "demo-2",
+  "type": "festa",
+  "title": "Festa d’Oltrarno",
+  "orgs": [
+   "Comitato Oltrarno",
+   "Arci"
+  ],
+  "date": "2026-11-07",
+  "time": "18:00",
+  "desc": "Festa di quartiere con musica dal vivo, cucina popolare e banchi delle associazioni lungo le vie dell’Oltrarno.",
+  "city": "Firenze",
+  "stops": [
+   {
+    "name": "Piazza del Carmine",
+    "note": "Banchi associazioni",
+    "lng": 11.24392,
+    "lat": 43.76825
+   },
+   {
+    "name": "Piazza Santo Spirito",
+    "note": "Musica dal vivo",
+    "lng": 11.24783,
+    "lat": 43.767
+   },
+   {
+    "name": "Piazza dei Pitti",
+    "note": "Chiusura e DJ set",
+    "lng": 11.2506,
+    "lat": 43.7658
+   }
+  ],
+  "pois": [
+   {
+    "type": "palco",
+    "name": "Palco Santo Spirito",
+    "note": "Concerti dalle 19:30",
+    "lng": 11.2479,
+    "lat": 43.7672
+   },
+   {
+    "type": "ristoro",
+    "name": "Cucina popolare",
+    "note": "Primi e panini, anche vegani",
+    "lng": 11.2455,
+    "lat": 43.7678
+   },
+   {
+    "type": "wc",
+    "name": "Bagni",
+    "note": "",
+    "lng": 11.2492,
+    "lat": 43.7664
+   },
+   {
+    "type": "info",
+    "name": "Info e volontari",
+    "note": "",
+    "lng": 11.2441,
+    "lat": 43.7684
+   }
+  ]
+ },
+ {
+  "id": "demo-3",
+  "type": "corteo",
+  "title": "Porta al Prato – Santa Croce",
+  "orgs": [
+   "CGIL",
+   "Collettivi studenteschi"
+  ],
+  "date": "2026-11-14",
+  "time": "10:30",
+  "desc": "Manifestazione regionale per la scuola pubblica. Arrivo in piazza Santa Croce con concerto di chiusura.",
+  "city": "Firenze",
+  "stops": [
+   {
+    "name": "Porta al Prato",
+    "note": "Concentramento",
+    "lng": 11.2402,
+    "lat": 43.77745
+   },
+   {
+    "name": "Stazione S. M. Novella",
+    "note": "Passaggio",
+    "lng": 11.2486,
+    "lat": 43.7764
+   },
+   {
+    "name": "Piazza del Duomo",
+    "note": "Passaggio",
+    "lng": 11.25553,
+    "lat": 43.7729
+   },
+   {
+    "name": "Piazza Santa Croce",
+    "note": "Arrivo e concerto",
+    "lng": 11.26215,
+    "lat": 43.7686
+   }
+  ],
+  "pois": [
+   {
+    "type": "info",
+    "name": "Accoglienza pullman",
+    "note": "",
+    "lng": 11.2405,
+    "lat": 43.7772
+   },
+   {
+    "type": "soccorso",
+    "name": "Primo soccorso",
+    "note": "",
+    "lng": 11.2475,
+    "lat": 43.7765
+   },
+   {
+    "type": "palco",
+    "name": "Palco Santa Croce",
+    "note": "Concerto dalle 13:00",
+    "lng": 11.2622,
+    "lat": 43.7684
+   }
+  ]
+ },
+ {
+  "id": "demo-4",
+  "type": "fiaccolata",
+  "title": "Fiaccolata Rifredi – San Marco",
+  "orgs": [
+   "ANPI",
+   "Arci"
+  ],
+  "date": "2026-11-21",
+  "time": "20:30",
+  "desc": "Fiaccolata in memoria, con letture lungo il percorso. Le fiaccole vengono distribuite al punto di ritrovo.",
+  "city": "Firenze",
+  "stops": [
+   {
+    "name": "Piazza Dalmazia",
+    "note": "Distribuzione fiaccole",
+    "lng": 11.2383,
+    "lat": 43.7953
+   },
+   {
+    "name": "Piazza della Libertà",
+    "note": "Prima lettura",
+    "lng": 11.2618,
+    "lat": 43.7851
+   },
+   {
+    "name": "Piazza San Marco",
+    "note": "Saluto finale",
+    "lng": 11.25903,
+    "lat": 43.77793
+   }
+  ],
+  "pois": [
+   {
+    "type": "info",
+    "name": "Fiaccole e info",
+    "note": "",
+    "lng": 11.2386,
+    "lat": 43.7951
+   },
+   {
+    "type": "palco",
+    "name": "Letture finali",
+    "note": "",
+    "lng": 11.2592,
+    "lat": 43.7777
+   }
+  ]
+ }
 ]

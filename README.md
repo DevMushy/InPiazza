@@ -151,6 +151,7 @@ In `.env.local` (o `src/config.ts`):
 
 - `VITE_MAP_STYLE_URL`: OpenFreeMap va bene anche in produzione. In alternativa MapTiler (`https://api.maptiler.com/maps/dataviz/style.json?key=…`) o Stadia.
   Con `recolor: false` in `src/config.ts` tieni lo stile originale.
+- `VITE_GEOCODER_URL`: ricerca indirizzi nell'editor, predefinito Photon (`https://photon.komoot.io`), gratuito e senza chiave. Lo usano solo gli organizzatori.
 - `VITE_ROUTER_URL`: il server OSRM pubblico di FOSSGIS è pensato per prove, con limiti d'uso. Siccome lo usano solo gli organizzatori al salvataggio, il traffico è basso; per sicurezza in produzione usa un tuo OSRM/Valhalla/GraphHopper o un servizio a pagamento. Se il routing non risponde, il percorso viene salvato in linea retta (le distanze compaiono con “~”).
 
 ## Struttura

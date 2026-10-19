@@ -58,7 +58,7 @@ export function hydrate(id: string, d: EventData): EventItem {
   if (line.length === 1) line = [line[0], line[0]];
   const cum = cumulative(line);
   return {
-    ...d, id, line, cum,
+    ...d, city: d.city ?? '', id, line, cum,
     bbox: bboxOf(line.length ? line : [[0, 0]]),
     poiDist: d.pois.map(p => distanceAlong(line, cum, [p.lng, p.lat]))
   };

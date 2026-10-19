@@ -24,7 +24,7 @@ export default function Organizer({ uid, orgName, onBack, onEdit }: Props) {
             <button key={ev.id} className="my-ev" onClick={() => onEdit(ev)}>
               <span>
                 <b>{ev.title}</b>
-                <small>{TYPE_LABEL[ev.type]} · {fmtDate(ev.date, true)} · {ev.time} · {km(ev.length)}</small><br />
+                <small>{TYPE_LABEL[ev.type]}{ev.city ? ' · ' + ev.city : ''} · {fmtDate(ev.date, true)} · {ev.time} · {km(ev.length)}</small><br />
                 <span className={'status ' + (past ? 'draft' : ev.published ? 'ok' : 'draft')} style={{ marginTop: 6 }}>
                   {past ? 'Conclusa' : ev.published ? 'Pubblicata' : 'Bozza'}
                 </span>

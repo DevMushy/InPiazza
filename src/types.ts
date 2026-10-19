@@ -15,6 +15,7 @@ export interface EventData {
   date: string;        // AAAA-MM-GG
   time: string;        // HH:MM
   desc: string;
+  city: string;        // es. "Firenze"
   stops: Stop[];
   pois: Poi[];
   route: number[];     // percorso appiattito [lng, lat, lng, lat, ...] (Firestore non accetta array annidati)
