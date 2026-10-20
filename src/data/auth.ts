@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   onAuthStateChanged, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink,
-  signOut as fbSignOut, deleteUser, type User, type ActionCodeSettings
+  signOut as fbSignOut, deleteUser, signInWithCustomToken, type User, type ActionCodeSettings
 } from 'firebase/auth';
 import { doc, onSnapshot, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
@@ -22,36 +22,81 @@ export interface Session {
   request: AccessRequest | null;
 }
 
-function actionSettings(): ActionCodeSettings {
+const HANDOFF_KEY = 'inpiazza:handoff';
+
+function actionSettings(handoff?: string): ActionCodeSettings {
   return {
-    // sul web il link torna dove sei (anche localhost); nelle app native va al dominio pubblico
-    // ?app=1: il link è stato chiesto dall'app sulla schermata Home (vedi isHomeAppLink)
-    url: (Capacitor.isNativePlatform() ? CONFIG.publicUrl : window.location.origin).replace(/\/$/, '') + '/accedi' + (!Capacitor.isNativePlatform() && isStandalone() ? '?app=1' : ''),
+    // sul web il link torna dove sei (anche localhost); nelle app native va al dominio pubblico.
+    // /accedi/<codice>: link chiesto dall'app sulla schermata Home (vedi handoff)
+    url: (Capacitor.isNativePlatform() ? CONFIG.publicUrl : window.location.origin).replace(/\/$/, '') + '/accedi' + (handoff ? '/' + handoff : ''),
     handleCodeInApp: true,
     iOS: { bundleId: CONFIG.iosBundleId },
     android: { packageName: CONFIG.androidPackage, installApp: false }
   };
 }
 
+const handoffApi = async (payload: Record<string, string>, idToken?: string) => {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (idToken) headers.Authorization = 'Bearer ' + idToken;
+  const r = await fetch(apiUrl('/api/handoff'), { method: 'POST', headers, body: JSON.stringify(payload) });
+  return { ok: r.ok, status: r.status, data: await r.json().catch(() => ({})) as Record<string, string | boolean> };
+};
+const randomCode = () => Array.from(crypto.getRandomValues(new Uint8Array(20)), b => b.toString(16).padStart(2, '0')).join('');
+
 export async function sendLoginLink(email: string) {
   if (!auth) throw new Error('Firebase non configurato');
-  await sendSignInLinkToEmail(auth, email, actionSettings());
+  // dall'app sulla Home di iPhone il link si aprirà in Safari: preparo il passaggio dell'accesso
+  let handoff: string | undefined;
+  if (!Capacitor.isNativePlatform() && isStandalone()) {
+    const code = randomCode();
+    const r = await handoffApi({ action: 'start', code, email }).catch(() => null);
+    if (r?.ok) { handoff = code; try { localStorage.setItem(HANDOFF_KEY, code); } catch { /* */ } }
+  }
+  await sendSignInLinkToEmail(auth, email, actionSettings(handoff));
   try { localStorage.setItem(EMAIL_KEY, email); } catch { /* storage non disponibile */ }
 }
 
-/**
- * Su iPhone il link dell'email si apre sempre in Safari, che non condivide i dati con l'app sulla Home.
- * Se il link è stato chiesto dall'app (continueUrl con app=1) e lo stiamo aprendo nel browser,
- * non lo consumiamo: va copiato e incollato nell'app.
- */
-export function isHomeAppLink(url: string): boolean {
-  if (!auth || Capacitor.isNativePlatform() || isStandalone() || !isSignInWithEmailLink(auth, url)) return false;
+/** Codice di passaggio nell'URL /accedi/<codice>, se presente */
+export function handoffCodeIn(url: string): string | null {
   try {
     const u = new URL(url);
-    const cont = u.searchParams.get('continueUrl') || '';
-    return u.searchParams.get('app') === '1' || /[?&]app=1\b/.test(decodeURIComponent(cont));
-  } catch { return false; }
+    const direct = u.pathname.match(/^\/accedi\/([a-f0-9]{32,64})/)?.[1];
+    if (direct) return direct;
+    const cont = u.searchParams.get('continueUrl');
+    return cont ? new URL(cont).pathname.match(/^\/accedi\/([a-f0-9]{32,64})/)?.[1] ?? null : null;
+  } catch { return null; }
 }
+
+/**
+ * Safari ha aperto un link chiesto dall'app sulla Home: completo l'accesso qui
+ * e lascio al server il "biglietto" che l'app ritirerà. Ritorna true se è andato a buon fine.
+ */
+export async function completeHandoffInBrowser(url: string, code: string): Promise<boolean> {
+  if (!auth || !isSignInWithEmailLink(auth, url)) return false;
+  const r = await handoffApi({ action: 'email', code });
+  const email = typeof r.data.email === 'string' ? r.data.email : null;
+  if (!email) throw new Error('expired');
+  const cred = await signInWithEmailLink(auth, email, url);
+  window.history.replaceState(null, '', '/');
+  const f = await handoffApi({ action: 'finish', code }, await cred.user.getIdToken());
+  return f.ok;
+}
+
+/** Nell'app sulla Home: se l'accesso è stato fatto in Safari, lo ritiro. Ritorna true se sono entrato. */
+export async function claimHandoff(): Promise<boolean> {
+  if (!auth || auth.currentUser) return false;
+  let code: string | null = null;
+  try { code = localStorage.getItem(HANDOFF_KEY); } catch { /* */ }
+  if (!code) return false;
+  const r = await handoffApi({ action: 'claim', code }).catch(() => null);
+  if (!r) return false;
+  if (r.status === 404) { try { localStorage.removeItem(HANDOFF_KEY); } catch { /* */ } return false; }
+  if (typeof r.data.token !== 'string') return false;
+  await signInWithCustomToken(auth, r.data.token);
+  try { localStorage.removeItem(HANDOFF_KEY); localStorage.removeItem(EMAIL_KEY); } catch { /* */ }
+  return true;
+}
+export function hasPendingHandoff(): boolean { try { return !!localStorage.getItem(HANDOFF_KEY); } catch { return false; } }
 
 /** Completa l'accesso se l'URL è un link email. Ritorna true se ha gestito il link. */
 export async function completeLogin(url: string, askEmail: () => Promise<string | null>): Promise<boolean> {

@@ -85,8 +85,8 @@ export default function Account({ session, onBack, onOrganizer, onAdmin }: Props
             )}
             {homeApp && (
               <form className="box" onSubmit={e => { e.preventDefault(); usePasted(); }}>
-                <h2>Incolla il link</h2>
-                <p className="lead">Su iPhone il link dell’email si apre in Safari. Tieni premuto il link nell’email → <b>Copia link</b> (oppure usa “Copia il link” nella pagina che si apre), poi incollalo qui.</p>
+                <h2>Se non entri da solo</h2>
+                <p className="lead">Tocca il link nell’email: si apre Safari, poi torna qui e l’accesso si completa in pochi secondi. Se non succede, tieni premuto il link nell’email → <b>Copia link</b> e incollalo qui.</p>
                 <input id="paste-link" className="input" inputMode="url" autoComplete="off" value={pasted} onChange={e => setPasted(e.target.value)} placeholder="https://…" />
                 <button className="cta" disabled={busy || !pasted.includes('oobCode')}>{busy ? 'Accesso…' : 'Accedi'}</button>
               </form>

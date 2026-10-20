@@ -4,7 +4,7 @@ import Account from './screens/Account';
 import Organizer from './screens/Organizer';
 import EventEditor from './screens/EventEditor';
 import Admin from './screens/Admin';
-import { completeLogin, isHomeAppLink, listenNativeLinks, useSession } from './data/auth';
+import { claimHandoff, completeHandoffInBrowser, completeLogin, handoffCodeIn, listenNativeLinks, useSession } from './data/auth';
 import { usePublicEvents } from './data/events';
 import { listenPush } from './lib/push';
 import { openEvent } from './lib/ui';
@@ -37,9 +37,20 @@ export default function App() {
     const handle = (url: string) => completeLogin(url, ask)
       .then(ok => { if (ok) { setView({ name: 'account' }); setLoginMsg(null); } })
       .catch(() => setLoginMsg('Il link di accesso non è valido o è scaduto. Richiedine uno nuovo.'));
-    if (isHomeAppLink(window.location.href)) setHandoff(window.location.href);
-    else handle(window.location.href);
-    return listenNativeLinks(handle);
+    const code = handoffCodeIn(window.location.href);
+    if (code) {
+      completeHandoffInBrowser(window.location.href, code)
+        .then(ok => { if (ok) setHandoff('done'); })
+        .catch(() => setLoginMsg('Il link di accesso non è valido o è scaduto. Richiedine uno nuovo dall’app.'));
+    } else handle(window.location.href);
+
+    // app sulla Home: quando torni dopo aver aperto il link in Safari, ritiro l'accesso
+    const tryClaim = () => { if (document.visibilityState === 'visible') claimHandoff().then(ok => { if (ok) setView({ name: 'account' }); }).catch(() => {}); };
+    tryClaim();
+    document.addEventListener('visibilitychange', tryClaim);
+    const iv = setInterval(tryClaim, 4000);
+    const offNative = listenNativeLinks(handle);
+    return () => { document.removeEventListener('visibilitychange', tryClaim); clearInterval(iv); offNative(); };
   }, []);
 
   const uid = session.user?.uid;
@@ -57,11 +68,7 @@ export default function App() {
           </div>
         </div>
       )}
-      {handoff && <Handoff link={handoff} onBrowser={() => {
-        const l = handoff; setHandoff(null);
-        completeLogin(l, () => new Promise(res => setAskEmail(() => res))).then(ok => { if (ok) setView({ name: 'account' }); })
-          .catch(() => setLoginMsg('Il link di accesso non è valido o è scaduto. Richiedine uno nuovo.'));
-      }} />}
+      {handoff && <HandoffDone onClose={() => setHandoff(null)} />}
       {askEmail && <EmailPrompt onDone={v => { askEmail(v); setAskEmail(null); }} />}
       {(loginMsg || note) && <div className="toast on" role="status" onClick={() => { setLoginMsg(null); setNote(null); }} style={{ pointerEvents: 'auto', position: 'fixed', zIndex: 40 }}>{loginMsg || note}</div>}
     </>
@@ -86,21 +93,14 @@ function EmailPrompt({ onDone }: { onDone: (v: string | null) => void }) {
   );
 }
 
-/** Link aperto in Safari ma chiesto dall'app sulla schermata Home: va copiato nell'app */
-function Handoff({ link, onBrowser }: { link: string; onBrowser: () => void }) {
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(link); setCopied(true); }
-    catch { const el = document.getElementById('handoff-link') as HTMLTextAreaElement | null; el?.select(); }
-  };
+/** Safari ha completato l'accesso chiesto dall'app sulla Home: basta tornare all'app */
+function HandoffDone({ onClose }: { onClose: () => void }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 20, background: 'var(--scrim)', display: 'grid', placeItems: 'center', padding: 16 }}>
       <div className="box" style={{ background: 'var(--surface)', width: 'min(380px, 100%)' }}>
-        <h2>Apri l’accesso nell’app</h2>
-        <p className="lead">Hai chiesto il link dall’app sulla schermata Home, ma iPhone l’ha aperto in Safari. Copia il link, apri <b>In Piazza</b> dalla Home e incollalo nel campo “Incolla il link”.</p>
-        <textarea id="handoff-link" className="input" readOnly value={link} rows={3} style={{ fontSize: 12 }} onFocus={e => e.currentTarget.select()} />
-        <button className="cta" onClick={copy}>{copied ? 'Copiato ✓' : 'Copia il link'}</button>
-        <button className="cta ghost" onClick={onBrowser}>Accedi qui in Safari</button>
+        <h2>Accesso fatto ✓</h2>
+        <p className="lead">Ora torna all’app <b>In Piazza</b> dalla schermata Home: entrerai da solo, senza fare altro. Puoi chiudere questa pagina di Safari.</p>
+        <button className="cta ghost" onClick={onClose}>Resta qui in Safari</button>
       </div>
     </div>
   );

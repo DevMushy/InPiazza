@@ -73,8 +73,11 @@ service cloud.firestore {
       allow delete: if isAdmin() || (signedIn() && me() == uid);
     }
 
-    // Avvisi già inviati: li scrivono solo le funzioni server (firebase-admin)
+    // Avvisi già inviati e passaggi di accesso Safari → app: solo le funzioni server (firebase-admin)
     match /notified/{id} {
+      allow read, write: if false;
+    }
+    match /handoffs/{id} {
       allow read, write: if false;
     }
 
