@@ -6,7 +6,8 @@ export const CONFIG = {
     authDomain: env.VITE_FIREBASE_AUTH_DOMAIN as string,
     projectId: env.VITE_FIREBASE_PROJECT_ID as string,
     appId: env.VITE_FIREBASE_APP_ID as string,
-    messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID as string
+    // se manca, si ricava dall'appId (formato 1:<sender>:web:...)
+    messagingSenderId: (env.VITE_FIREBASE_MESSAGING_SENDER_ID as string) || String(env.VITE_FIREBASE_APP_ID || '').split(':')[1] || ''
   },
   // Chiave pubblica per le notifiche web (Firebase → Impostazioni progetto → Cloud Messaging → Certificati push web)
   vapidKey: (env.VITE_FIREBASE_VAPID_KEY as string) || '',
