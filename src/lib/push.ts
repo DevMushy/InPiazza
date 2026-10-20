@@ -47,10 +47,11 @@ async function call(t: Topic, token: string, unsubscribe: boolean, user?: User |
   if (!r.ok) throw new Error('subscribe ' + r.status);
 }
 
-export type EnableResult = 'ok' | 'denied' | 'unsupported' | 'ios-install' | 'error';
+export type EnableResult = 'ok' | 'denied' | 'unsupported' | 'unconfigured' | 'ios-install' | 'error';
 
 /** Chiede il permesso e iscrive il dispositivo al canale. Nessun dato viene salvato nel nostro database. */
 export async function enablePush(t: Topic, user?: User | null): Promise<EnableResult> {
+  if (!native() && !CONFIG.vapidKey) return 'unconfigured';
   if (iosNeedsInstall()) return 'ios-install';
   if (!(await pushSupported())) return 'unsupported';
   try {
