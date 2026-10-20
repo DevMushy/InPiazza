@@ -8,6 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { auth, db } from '../firebase';
 import { CONFIG, apiUrl } from '../config';
+import { isStandalone } from '../lib/ui';
 
 const EMAIL_KEY = 'inpiazza:emailForSignIn';
 
@@ -24,7 +25,8 @@ export interface Session {
 function actionSettings(): ActionCodeSettings {
   return {
     // sul web il link torna dove sei (anche localhost); nelle app native va al dominio pubblico
-    url: (Capacitor.isNativePlatform() ? CONFIG.publicUrl : window.location.origin).replace(/\/$/, '') + '/accedi',
+    // ?app=1: il link è stato chiesto dall'app sulla schermata Home (vedi isHomeAppLink)
+    url: (Capacitor.isNativePlatform() ? CONFIG.publicUrl : window.location.origin).replace(/\/$/, '') + '/accedi' + (!Capacitor.isNativePlatform() && isStandalone() ? '?app=1' : ''),
     handleCodeInApp: true,
     iOS: { bundleId: CONFIG.iosBundleId },
     android: { packageName: CONFIG.androidPackage, installApp: false }
@@ -35,6 +37,20 @@ export async function sendLoginLink(email: string) {
   if (!auth) throw new Error('Firebase non configurato');
   await sendSignInLinkToEmail(auth, email, actionSettings());
   try { localStorage.setItem(EMAIL_KEY, email); } catch { /* storage non disponibile */ }
+}
+
+/**
+ * Su iPhone il link dell'email si apre sempre in Safari, che non condivide i dati con l'app sulla Home.
+ * Se il link è stato chiesto dall'app (continueUrl con app=1) e lo stiamo aprendo nel browser,
+ * non lo consumiamo: va copiato e incollato nell'app.
+ */
+export function isHomeAppLink(url: string): boolean {
+  if (!auth || Capacitor.isNativePlatform() || isStandalone() || !isSignInWithEmailLink(auth, url)) return false;
+  try {
+    const u = new URL(url);
+    const cont = u.searchParams.get('continueUrl') || '';
+    return u.searchParams.get('app') === '1' || /[?&]app=1\b/.test(decodeURIComponent(cont));
+  } catch { return false; }
 }
 
 /** Completa l'accesso se l'URL è un link email. Ritorna true se ha gestito il link. */

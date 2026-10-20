@@ -4,7 +4,7 @@ import Account from './screens/Account';
 import Organizer from './screens/Organizer';
 import EventEditor from './screens/EventEditor';
 import Admin from './screens/Admin';
-import { completeLogin, listenNativeLinks, useSession } from './data/auth';
+import { completeLogin, isHomeAppLink, listenNativeLinks, useSession } from './data/auth';
 import { usePublicEvents } from './data/events';
 import { listenPush } from './lib/push';
 import { openEvent } from './lib/ui';
@@ -18,6 +18,7 @@ export default function App() {
   const [view, setView] = useState<View>({ name: 'home' });
   const [loginMsg, setLoginMsg] = useState<string | null>(null);
   const [askEmail, setAskEmail] = useState<((v: string | null) => void) | null>(null);
+  const [handoff, setHandoff] = useState<string | null>(null);
 
   // messaggi brevi e notifiche ricevute con l'app aperta
   const [note, setNote] = useState<string | null>(null);
@@ -36,7 +37,8 @@ export default function App() {
     const handle = (url: string) => completeLogin(url, ask)
       .then(ok => { if (ok) { setView({ name: 'account' }); setLoginMsg(null); } })
       .catch(() => setLoginMsg('Il link di accesso non è valido o è scaduto. Richiedine uno nuovo.'));
-    handle(window.location.href);
+    if (isHomeAppLink(window.location.href)) setHandoff(window.location.href);
+    else handle(window.location.href);
     return listenNativeLinks(handle);
   }, []);
 
@@ -55,6 +57,11 @@ export default function App() {
           </div>
         </div>
       )}
+      {handoff && <Handoff link={handoff} onBrowser={() => {
+        const l = handoff; setHandoff(null);
+        completeLogin(l, () => new Promise(res => setAskEmail(() => res))).then(ok => { if (ok) setView({ name: 'account' }); })
+          .catch(() => setLoginMsg('Il link di accesso non è valido o è scaduto. Richiedine uno nuovo.'));
+      }} />}
       {askEmail && <EmailPrompt onDone={v => { askEmail(v); setAskEmail(null); }} />}
       {(loginMsg || note) && <div className="toast on" role="status" onClick={() => { setLoginMsg(null); setNote(null); }} style={{ pointerEvents: 'auto', position: 'fixed', zIndex: 40 }}>{loginMsg || note}</div>}
     </>
@@ -75,6 +82,26 @@ function EmailPrompt({ onDone }: { onDone: (v: string | null) => void }) {
           <button className="cta">Accedi</button>
         </div>
       </form>
+    </div>
+  );
+}
+
+/** Link aperto in Safari ma chiesto dall'app sulla schermata Home: va copiato nell'app */
+function Handoff({ link, onBrowser }: { link: string; onBrowser: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(link); setCopied(true); }
+    catch { const el = document.getElementById('handoff-link') as HTMLTextAreaElement | null; el?.select(); }
+  };
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 20, background: 'var(--scrim)', display: 'grid', placeItems: 'center', padding: 16 }}>
+      <div className="box" style={{ background: 'var(--surface)', width: 'min(380px, 100%)' }}>
+        <h2>Apri l’accesso nell’app</h2>
+        <p className="lead">Hai chiesto il link dall’app sulla schermata Home, ma iPhone l’ha aperto in Safari. Copia il link, apri <b>In Piazza</b> dalla Home e incollalo nel campo “Incolla il link”.</p>
+        <textarea id="handoff-link" className="input" readOnly value={link} rows={3} style={{ fontSize: 12 }} onFocus={e => e.currentTarget.select()} />
+        <button className="cta" onClick={copy}>{copied ? 'Copiato ✓' : 'Copia il link'}</button>
+        <button className="cta ghost" onClick={onBrowser}>Accedi qui in Safari</button>
+      </div>
     </div>
   );
 }

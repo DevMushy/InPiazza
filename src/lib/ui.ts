@@ -10,3 +10,7 @@ export const pushMessage: Record<string, string> = {
   'ios-install': 'Su iPhone: tocca Condividi → “Aggiungi alla schermata Home”, apri l’app da lì e riattiva le notifiche.',
   error: 'Non sono riuscito ad attivare le notifiche. Riprova tra poco.'
 };
+
+/** Web app aperta dalla schermata Home (non nel browser) */
+export const isStandalone = () =>
+  matchMedia('(display-mode: standalone)').matches || (navigator as unknown as { standalone?: boolean }).standalone === true;

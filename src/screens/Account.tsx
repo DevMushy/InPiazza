@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Back } from '../components/Icons';
 import { firebaseConfigured } from '../config';
 import {
-  deleteAccount, requestAccess, sendLoginLink, signOut, withdrawRequest, type Session
+  completeLogin, deleteAccount, requestAccess, sendLoginLink, signOut, withdrawRequest, type Session
 } from '../data/auth';
 import { usePendingRequests } from '../data/events';
 import { disablePush, enablePush, lastPushError, pushEnabled } from '../lib/push';
-import { pushMessage } from '../lib/ui';
+import { isStandalone, pushMessage } from '../lib/ui';
 
 interface Props { session: Session; onBack: () => void; onOrganizer: () => void; onAdmin: () => void }
 
@@ -15,6 +15,7 @@ const errText = (e: unknown) => {
   if (code === 'auth/invalid-email') return 'Indirizzo email non valido.';
   if (code === 'auth/requires-recent-login') return 'Per sicurezza accedi di nuovo con il link email, poi riprova.';
   if (code === 'auth/quota-exceeded') return 'Troppi tentativi: riprova più tardi.';
+  if (code === 'auth/invalid-action-code' || code === 'auth/expired-action-code') return 'Link non valido o già usato: richiedine uno nuovo.';
   if (code === 'permission-denied') return 'Operazione non permessa.';
   if (code === 'auth/operation-not-allowed') return 'Accesso con link email non attivo: in Firebase → Authentication → Metodo di accesso attiva Email/password e “Link email”.';
   if (code === 'auth/unauthorized-continue-uri' || code === 'auth/unauthorized-domain') return 'Questo dominio non è autorizzato: aggiungilo in Firebase → Authentication → Impostazioni → Domini autorizzati.';
@@ -31,6 +32,12 @@ export default function Account({ session, onBack, onOrganizer, onAdmin }: Props
   const [org, setOrg] = useState('');
   const [note, setNote] = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
+  const [pasted, setPasted] = useState('');
+  const homeApp = isStandalone();
+  const usePasted = () => run(async () => {
+    const ok = await completeLogin(pasted.trim(), async () => email.trim() || null);
+    if (!ok) throw { code: 'auth/invalid-action-code' };
+  });
   const pending = usePendingRequests(isAdmin);
   const [adminPush, setAdminPush] = useState(() => pushEnabled('admin-richieste'));
   const [pushNote, setPushNote] = useState<string | null>(null);
@@ -75,6 +82,14 @@ export default function Account({ session, onBack, onOrganizer, onAdmin }: Props
                 <p className="lead">Abbiamo inviato un link a <b>{email}</b>. Aprilo da questo dispositivo per completare l’accesso. Se non lo trovi guarda nello spam.</p>
                 <button className="cta ghost" onClick={() => setSent(false)}>Usa un’altra email</button>
               </div>
+            )}
+            {homeApp && (
+              <form className="box" onSubmit={e => { e.preventDefault(); usePasted(); }}>
+                <h2>Incolla il link</h2>
+                <p className="lead">Su iPhone il link dell’email si apre in Safari. Tieni premuto il link nell’email → <b>Copia link</b> (oppure usa “Copia il link” nella pagina che si apre), poi incollalo qui.</p>
+                <input id="paste-link" className="input" inputMode="url" autoComplete="off" value={pasted} onChange={e => setPasted(e.target.value)} placeholder="https://…" />
+                <button className="cta" disabled={busy || !pasted.includes('oobCode')}>{busy ? 'Accesso…' : 'Accedi'}</button>
+              </form>
             )}
           </>
         )}
