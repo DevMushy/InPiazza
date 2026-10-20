@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView, { type FitRequest, type PoiRef } from '../components/MapView';
 import BottomSheet from '../components/BottomSheet';
 import Badge from '../components/Badge';
-import { Calendar, Caret, Chevron, NumPin, Person, Pin } from '../components/Icons';
+import { Bell, Calendar, Caret, Chevron, NumPin, Person, Pin } from '../components/Icons';
+import { disablePush, enablePush, pushEnabled } from '../lib/push';
+import { pushMessage, toast } from '../lib/ui';
 import { POI_KEYS, POI_TYPES, TYPE_LABEL, TYPE_PLURAL } from '../constants';
 import { addMin, durTxt, fmtDate, km, walkMin } from '../lib/format';
 import { unionBbox } from '../lib/geo';
@@ -21,6 +23,18 @@ export default function Home({ feed, onAccount, accountBadge }: Props) {
   const [sheet, setSheet] = useState<SheetMode>('closed');
   const [fit, setFit] = useState<FitRequest | null>(null);
   const phone = useRef<HTMLDivElement>(null);
+  const [bellOn, setBellOn] = useState(() => pushEnabled('eventi'));
+  const [bellBusy, setBellBusy] = useState(false);
+  const toggleBell = async () => {
+    setBellBusy(true);
+    if (bellOn) { await disablePush('eventi'); setBellOn(false); toast('Notifiche disattivate'); }
+    else {
+      const r = await enablePush('eventi');
+      if (r === 'ok') { setBellOn(true); toast('Ti avviseremo quando viene pubblicata una manifestazione'); }
+      else toast(pushMessage[r]);
+    }
+    setBellBusy(false);
+  };
   const mapWrap = useRef<HTMLDivElement>(null);
 
   const cityKey = (c: string) => c.trim().toLocaleLowerCase('it');
@@ -70,6 +84,21 @@ export default function Home({ feed, onAccount, accountBadge }: Props) {
     const p = ev.pois[r.index];
     setTimeout(() => setFit(f => ({ key: (f?.key ?? 0) + 1, bbox: null, center: [p.lng, p.lat], zoom: 16.5, bottom: covered('half') })), 60);
   };
+  // apertura diretta di una manifestazione: link ?e=ID (notifica web) o tocco su notifica nell'app
+  const wanted = useRef<string | null>(new URLSearchParams(window.location.search).get('e'));
+  useEffect(() => {
+    const h = (e: Event) => { wanted.current = (e as CustomEvent<string>).detail; setType(''); setDate(''); setCity(''); };
+    window.addEventListener('inpiazza:open-event', h);
+    return () => window.removeEventListener('inpiazza:open-event', h);
+  }, []);
+  useEffect(() => {
+    const id = wanted.current;
+    if (!id || !visible.some(e => e.id === id)) return;
+    wanted.current = null; pendingFit.current = null;
+    if (window.location.search) window.history.replaceState(null, '', window.location.pathname);
+    select(id, true);
+  }, [visible]);
+
   const changeFilter = (fn: () => void) => { fn(); setSheet('closed'); setSelPoi(null); setSelId(null); pendingFit.current = 'all'; };
   const togglePoi = (k: PoiType) => setPoiOn(s => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n; });
 
@@ -80,6 +109,8 @@ export default function Home({ feed, onAccount, accountBadge }: Props) {
     <div className="phone" ref={phone}>
       <header className="top">
         <div className="brand">In Piazza</div>
+        <button className="icon-btn" onClick={toggleBell} disabled={bellBusy} aria-pressed={bellOn}
+          aria-label={bellOn ? 'Disattiva le notifiche delle nuove manifestazioni' : 'Attiva le notifiche delle nuove manifestazioni'}><Bell on={bellOn} /></button>
         <button className="icon-btn" onClick={onAccount} aria-label={accountBadge ? 'Area organizzatori' : 'Accesso organizzatori'}><Person /></button>
       </header>
 

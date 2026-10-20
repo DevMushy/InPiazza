@@ -7,7 +7,7 @@ import { doc, onSnapshot, setDoc, deleteDoc, serverTimestamp } from 'firebase/fi
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { auth, db } from '../firebase';
-import { CONFIG } from '../config';
+import { CONFIG, apiUrl } from '../config';
 
 const EMAIL_KEY = 'inpiazza:emailForSignIn';
 
@@ -67,11 +67,10 @@ export async function requestAccess(user: User, orgName: string, note: string) {
   notifyAdmin(user).catch(() => { /* l'avviso è facoltativo: la richiesta è comunque salvata */ });
 }
 
-/** Chiede alla funzione su Vercel di mandare un'email all'admin */
+/** Chiede alla funzione su Vercel di avvisare gli admin (notifica push ed eventuale email) */
 async function notifyAdmin(user: User) {
-  const base = Capacitor.isNativePlatform() ? CONFIG.publicUrl.replace(/\/$/, '') : '';
   const token = await user.getIdToken();
-  await fetch(base + '/api/notify-request', {
+  await fetch(apiUrl('/api/notify-request'), {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ uid: user.uid })

@@ -28,3 +28,8 @@ export const Pin = () => (
 export const Search = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M20 20l-4.8-4.8" /></svg>
 );
+export const Bell = ({ on }: { on?: boolean }) => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill={on ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" aria-hidden="true">
+    <path d="M6 9.5a6 6 0 0 1 12 0c0 4.5 1.8 6.3 2.4 7H3.6c.6-.7 2.4-2.5 2.4-7z" /><path d="M10 20a2.2 2.2 0 0 0 4 0" strokeLinecap="round" />
+  </svg>
+);

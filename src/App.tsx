@@ -6,6 +6,8 @@ import EventEditor from './screens/EventEditor';
 import Admin from './screens/Admin';
 import { completeLogin, listenNativeLinks, useSession } from './data/auth';
 import { usePublicEvents } from './data/events';
+import { listenPush } from './lib/push';
+import { openEvent } from './lib/ui';
 import type { EventItem } from './types';
 
 type View = { name: 'home' } | { name: 'account' } | { name: 'organizer' } | { name: 'editor'; event: EventItem | null } | { name: 'admin' };
@@ -16,6 +18,17 @@ export default function App() {
   const [view, setView] = useState<View>({ name: 'home' });
   const [loginMsg, setLoginMsg] = useState<string | null>(null);
   const [askEmail, setAskEmail] = useState<((v: string | null) => void) | null>(null);
+
+  // messaggi brevi e notifiche ricevute con l'app aperta
+  const [note, setNote] = useState<string | null>(null);
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout>;
+    const show = (m: string) => { setNote(m); clearTimeout(t); t = setTimeout(() => setNote(null), 4000); };
+    const h = (e: Event) => show((e as CustomEvent<string>).detail);
+    window.addEventListener('inpiazza:toast', h);
+    const off = listenPush((title, body) => show(body ? `${title}: ${body}` : title), id => { setView({ name: 'home' }); openEvent(id); });
+    return () => { window.removeEventListener('inpiazza:toast', h); off(); clearTimeout(t); };
+  }, []);
 
   // completa l'accesso dal link email (web: URL attuale; app: universal/app link)
   useEffect(() => {
@@ -43,7 +56,7 @@ export default function App() {
         </div>
       )}
       {askEmail && <EmailPrompt onDone={v => { askEmail(v); setAskEmail(null); }} />}
-      {loginMsg && <div className="toast on" role="status" onClick={() => setLoginMsg(null)} style={{ pointerEvents: 'auto' }}>{loginMsg}</div>}
+      {(loginMsg || note) && <div className="toast on" role="status" onClick={() => { setLoginMsg(null); setNote(null); }} style={{ pointerEvents: 'auto', position: 'fixed', zIndex: 40 }}>{loginMsg || note}</div>}
     </>
   );
 }

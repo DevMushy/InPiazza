@@ -4,6 +4,8 @@ import Badge from '../components/Badge';
 import { Back, Search } from '../components/Icons';
 import { CONFIG } from '../config';
 import { cityAt, searchPlaces, type Place } from '../lib/geocode';
+import { notifyEventPublished } from '../lib/push';
+import { auth } from '../firebase';
 import { POI_KEYS, POI_TYPES, TYPE_LABEL } from '../constants';
 import { removeEvent, saveEvent } from '../data/events';
 import { hydrate } from '../lib/geo';
@@ -112,7 +114,7 @@ export default function EventEditor({ uid, orgName, event, onClose }: Props) {
     setBusy(true); setErr(null);
     try {
       const r = route ?? await computeRoute(stops);
-      await saveEvent(event?.id ?? null, {
+      const savedId = await saveEvent(event?.id ?? null, {
         ownerUid: event?.ownerUid ?? uid, published, type, title: title.trim(),
         orgs: orgs.split(',').map(s => s.trim()).filter(Boolean).slice(0, 10),
         date, time, desc: desc.trim().slice(0, 2000), city: city.trim().slice(0, 60),
@@ -120,6 +122,7 @@ export default function EventEditor({ uid, orgName, event, onClose }: Props) {
         pois: pois.map(p => ({ ...p, name: p.name.trim().slice(0, 80), note: p.note.trim().slice(0, 200) })),
         route: r.route, routed: r.routed, length: r.length, stopDist: r.stopDist
       });
+      if (published && auth?.currentUser) notifyEventPublished(auth.currentUser, savedId);
       onClose();
     } catch (e) {
       setErr((e as { code?: string }).code === 'permission-denied' ? 'Non hai i permessi per salvare: il tuo accesso da organizzatore è attivo?' : 'Salvataggio non riuscito. Riprova.');

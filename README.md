@@ -85,16 +85,33 @@ L'utente può ritirare la richiesta, uscire o **eliminare l'account** dall'app.
 
 Le regole in `firestore.rules` accettano **solo** questi campi: un client modificato non può aggiungerne altri.
 
-### Avviso email per le nuove richieste
+### Notifiche
 
-Quando qualcuno invia una richiesta, l'app chiama la funzione Vercel `api/notify-request.js`, che manda un'email all'admin tramite [Resend](https://resend.com) (piano gratuito: 100 email al giorno).
-La funzione legge la richiesta da Firestore con il token dell'utente stesso, quindi non servono chiavi di servizio e nessuno può far partire avvisi per richieste altrui. Avvisa solo per richieste create negli ultimi 10 minuti.
+Due canali di notifiche push (Firebase Cloud Messaging, gratuito):
 
-1. Crea un account su Resend → **API Keys** → crea una chiave.
-2. Su Vercel → Settings → Environment Variables aggiungi `RESEND_API_KEY` e `ADMIN_EMAIL`, poi ridistribuisci.
-3. Senza dominio verificato Resend spedisce da `onboarding@resend.dev` e **solo all'indirizzo con cui ti sei registrato**: usa quello come `ADMIN_EMAIL`. Per mandare a più persone verifica un tuo dominio su Resend e imposta `MAIL_FROM`.
+| Canale | Chi lo riceve | Quando |
+|---|---|---|
+| `eventi` | chi tocca la 🔔 nella schermata principale | una manifestazione viene pubblicata (una volta sola per manifestazione) |
+| `admin-richieste` | gli admin che lo attivano dal proprio account | arriva una nuova richiesta organizzatore (solo il nome dell'organizzazione, non l'email) |
 
-L'email dell'organizzatore passa da Resend solo per arrivare a te; Resend non la usa per altro.
+**Nessun dato dei dispositivi finisce nel database**: il token del dispositivo viene passato a Firebase per l'iscrizione al canale e non viene salvato da nessun'altra parte. Per evitare doppioni le funzioni scrivono solo `notified/{id}` (ora di invio), che i client non possono né leggere né scrivere.
+
+Le funzioni sono in `api/` e girano su Vercel:
+- `push-subscribe.js`: iscrive/disiscrive un dispositivo (per il canale admin controlla che chi chiama sia admin);
+- `notify-event.js`: chiamata dall'app quando un organizzatore salva una manifestazione pubblicata;
+- `notify-request.js`: chiamata quando qualcuno invia la richiesta di accesso (manda anche un'email se configuri Resend).
+
+**Configurazione**
+1. Firebase → Impostazioni progetto → **Cloud Messaging** → *Certificati push web* → **Genera coppia di chiavi**. Copia la chiave in `VITE_FIREBASE_VAPID_KEY`.
+2. Firebase → Impostazioni progetto → Generali: copia **ID mittente** (o `messagingSenderId` della configurazione web) in `VITE_FIREBASE_MESSAGING_SENDER_ID`.
+3. Firebase → Impostazioni progetto → **Account di servizio** → *Genera nuova chiave privata*. Su Vercel crea la variabile `FIREBASE_SERVICE_ACCOUNT` e incolla **tutto il contenuto** del file JSON. È una chiave con pieni poteri: non metterla mai nel codice o su GitHub.
+4. Su Vercel aggiungi anche `VITE_FIREBASE_VAPID_KEY` e `VITE_FIREBASE_MESSAGING_SENDER_ID`, poi ridistribuisci.
+
+**iPhone (web)**: Safari mostra le notifiche solo se il sito è aggiunto alla schermata Home (Condividi → Aggiungi alla schermata Home) e aperto da lì. L'app lo spiega quando tocchi la 🔔.
+
+**App native**: il plugin `@capacitor-firebase/messaging` usa gli stessi canali. Servono `GoogleService-Info.plist` (iOS, più una chiave APNs caricata in Firebase → Cloud Messaging) e `google-services.json` (Android), da scaricare da Firebase registrando le app iOS e Android. Segui la guida del plugin: <https://github.com/capawesome-team/capacitor-firebase/tree/main/packages/messaging>.
+
+**Email facoltativa per le richieste**: aggiungi su Vercel `RESEND_API_KEY` e `ADMIN_EMAIL` (vedi [Resend](https://resend.com); senza dominio verificato può scrivere solo all'indirizzo con cui ti sei registrato).
 
 ## 4. Pubblicare il web
 

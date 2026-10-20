@@ -5,6 +5,8 @@ import {
   deleteAccount, requestAccess, sendLoginLink, signOut, withdrawRequest, type Session
 } from '../data/auth';
 import { usePendingRequests } from '../data/events';
+import { disablePush, enablePush, pushEnabled } from '../lib/push';
+import { pushMessage } from '../lib/ui';
 
 interface Props { session: Session; onBack: () => void; onOrganizer: () => void; onAdmin: () => void }
 
@@ -30,6 +32,14 @@ export default function Account({ session, onBack, onOrganizer, onAdmin }: Props
   const [note, setNote] = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
   const pending = usePendingRequests(isAdmin);
+  const [adminPush, setAdminPush] = useState(() => pushEnabled('admin-richieste'));
+  const [pushNote, setPushNote] = useState<string | null>(null);
+  const toggleAdminPush = () => run(async () => {
+    if (!user) return;
+    if (adminPush) { await disablePush('admin-richieste', user); setAdminPush(false); setPushNote(null); return; }
+    const r = await enablePush('admin-richieste', user);
+    if (r === 'ok') { setAdminPush(true); setPushNote(null); } else setPushNote(pushMessage[r]);
+  });
 
   const run = async (fn: () => Promise<void>) => {
     setBusy(true); setErr(null);
@@ -83,6 +93,15 @@ export default function Account({ session, onBack, onOrganizer, onAdmin }: Props
 
             {isOrganizer && <button className="cta" onClick={onOrganizer}>Gestisci le tue manifestazioni</button>}
             {isAdmin && <button className="cta ghost" onClick={onAdmin}>Richieste di accesso{pending.length ? ` (${pending.length})` : ''}</button>}
+            {isAdmin && (
+              <div className="box">
+                <label className="switch">Notificami le nuove richieste
+                  <input id="admin-push" type="checkbox" checked={adminPush} disabled={busy} onChange={toggleAdminPush} />
+                </label>
+                <p className="muted" style={{ fontSize: 12, margin: 0 }}>Vale solo per questo dispositivo. La notifica dice il nome dell’organizzazione, non l’email.</p>
+                {pushNote && <p className="err" style={{ margin: 0 }}>{pushNote}</p>}
+              </div>
+            )}
 
             {!isOrganizer && !request && (
               <form className="box" onSubmit={e => { e.preventDefault(); run(() => requestAccess(user, org, note)); }}>

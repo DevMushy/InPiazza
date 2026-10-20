@@ -73,6 +73,11 @@ service cloud.firestore {
       allow delete: if isAdmin() || (signedIn() && me() == uid);
     }
 
+    // Avvisi già inviati: li scrivono solo le funzioni server (firebase-admin)
+    match /notified/{id} {
+      allow read, write: if false;
+    }
+
     // Admin: si creano solo a mano dalla console Firebase
     match /admins/{uid} {
       allow read: if signedIn() && me() == uid;

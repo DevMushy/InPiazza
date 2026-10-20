@@ -3,9 +3,10 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/((?!api/|assets/|\\.well-known/).*)", "destination": "/index.html" }],
+  "rewrites": [{ "source": "/((?!api/|assets/|\\.well-known/|firebase-messaging-sw\\.js|manifest\\.webmanifest|.*\\.png).*)", "destination": "/index.html" }],
   "headers": [
     { "source": "/.well-known/apple-app-site-association", "headers": [{ "key": "Content-Type", "value": "application/json" }] },
+    { "source": "/firebase-messaging-sw.js", "headers": [{ "key": "Service-Worker-Allowed", "value": "/" }, { "key": "Cache-Control", "value": "no-cache" }] },
     { "source": "/(.*)", "headers": [{ "key": "Referrer-Policy", "value": "no-referrer" }] }
   ]
 }
