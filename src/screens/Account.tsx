@@ -5,7 +5,7 @@ import {
   deleteAccount, requestAccess, sendLoginLink, signOut, withdrawRequest, type Session
 } from '../data/auth';
 import { usePendingRequests } from '../data/events';
-import { disablePush, enablePush, pushEnabled } from '../lib/push';
+import { disablePush, enablePush, lastPushError, pushEnabled } from '../lib/push';
 import { pushMessage } from '../lib/ui';
 
 interface Props { session: Session; onBack: () => void; onOrganizer: () => void; onAdmin: () => void }
@@ -38,7 +38,7 @@ export default function Account({ session, onBack, onOrganizer, onAdmin }: Props
     if (!user) return;
     if (adminPush) { await disablePush('admin-richieste', user); setAdminPush(false); setPushNote(null); return; }
     const r = await enablePush('admin-richieste', user);
-    if (r === 'ok') { setAdminPush(true); setPushNote(null); } else setPushNote(pushMessage[r]);
+    if (r === 'ok') { setAdminPush(true); setPushNote(null); } else setPushNote(pushMessage[r] + (r === 'error' && lastPushError ? ` (${lastPushError})` : ''));
   });
 
   const run = async (fn: () => Promise<void>) => {

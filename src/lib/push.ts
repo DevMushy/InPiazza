@@ -44,10 +44,12 @@ async function call(t: Topic, token: string, unsubscribe: boolean, user?: User |
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (user) headers.Authorization = 'Bearer ' + (await user.getIdToken());
   const r = await fetch(apiUrl('/api/push-subscribe'), { method: 'POST', headers, body: JSON.stringify({ token, topic: t, unsubscribe }) });
-  if (!r.ok) throw new Error('subscribe ' + r.status);
+  if (!r.ok) throw new Error(r.status + ' ' + (await r.text().catch(() => '')).slice(0, 120));
 }
 
 export type EnableResult = 'ok' | 'denied' | 'unsupported' | 'unconfigured' | 'ios-install' | 'error';
+/** Codice dell'ultimo errore, per capire cosa non va */
+export let lastPushError = '';
 
 /** Chiede il permesso e iscrive il dispositivo al canale. Nessun dato viene salvato nel nostro database. */
 export async function enablePush(t: Topic, user?: User | null): Promise<EnableResult> {
@@ -57,11 +59,15 @@ export async function enablePush(t: Topic, user?: User | null): Promise<EnableRe
   try {
     const perm = await FirebaseMessaging.requestPermissions();
     if (perm.receive !== 'granted') return 'denied';
-    await call(t, await deviceToken(), false, user);
+    let token: string;
+    try { token = await deviceToken(); }
+    catch (e) { lastPushError = 'token: ' + ((e as { code?: string }).code || (e as Error).message); throw e; }
+    try { await call(t, token, false, user); }
+    catch (e) { lastPushError = 'server: ' + (e as Error).message; throw e; }
     store.set(t, true);
     return 'ok';
   } catch (e) {
-    console.error(e);
+    console.error('[push]', lastPushError, e);
     return 'error';
   }
 }

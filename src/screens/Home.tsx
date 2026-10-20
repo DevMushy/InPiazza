@@ -3,7 +3,7 @@ import MapView, { type FitRequest, type PoiRef } from '../components/MapView';
 import BottomSheet from '../components/BottomSheet';
 import Badge from '../components/Badge';
 import { Bell, Calendar, Caret, Chevron, NumPin, Person, Pin } from '../components/Icons';
-import { disablePush, enablePush, pushEnabled } from '../lib/push';
+import { disablePush, enablePush, lastPushError, pushEnabled } from '../lib/push';
 import { pushMessage, toast } from '../lib/ui';
 import { POI_KEYS, POI_TYPES, TYPE_LABEL, TYPE_PLURAL } from '../constants';
 import { addMin, durTxt, fmtDate, km, walkMin } from '../lib/format';
@@ -31,7 +31,7 @@ export default function Home({ feed, onAccount, accountBadge }: Props) {
     else {
       const r = await enablePush('eventi');
       if (r === 'ok') { setBellOn(true); toast('Ti avviseremo quando viene pubblicata una manifestazione'); }
-      else toast(pushMessage[r]);
+      else toast(pushMessage[r] + (r === 'error' && lastPushError ? ` (${lastPushError})` : ''));
     }
     setBellBusy(false);
   };
